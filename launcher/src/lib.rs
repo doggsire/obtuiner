@@ -1,11 +1,12 @@
-use std::{collections::HashSet, io::stdout, process::Command, time::Duration};
+use std::{collections::HashSet, io::stdout, os::unix::process::CommandExt, process::Command, time::Duration};
 
 use anyhow::Result;
 use core_domain::{load_profiles, save_profiles, LaunchProfile};
 use crossterm::{
+    cursor::MoveTo,
     event::{self, Event, KeyCode},
     execute,
-    terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
+    terminal::{disable_raw_mode, enable_raw_mode, Clear, ClearType, EnterAlternateScreen, LeaveAlternateScreen},
 };
 use ratatui::{backend::CrosstermBackend, Terminal};
 use tui_kit::
@@ -98,8 +99,10 @@ pub fn run(_args: &[String]) -> Result<()> {
                             CommonAction::Quit => break,
                             CommonAction::Activate => {
                                 if let Some(profile) = filtered.get(state.selected) {
-                                    launch_profile(profile);
-                                    break;
+                                    match launch_profile(profile) {
+                                        Ok(()) => break,
+                                        Err(e) => status = format!("Launch failed: {}", e),
+                                    }
                                 }
                             }
                             CommonAction::None => {}
@@ -113,16 +116,17 @@ pub fn run(_args: &[String]) -> Result<()> {
     restore_terminal(&mut terminal)
 }
 
-fn launch_profile(profile: &LaunchProfile) {
+fn launch_profile(profile: &LaunchProfile) -> Result<()> {
     let mut cmd = Command::new(&profile.command);
     cmd.args(&profile.args);
+    cmd.process_group(0);
     if !profile.working_dir.is_empty() && profile.working_dir != "~" {
         cmd.current_dir(&profile.working_dir);
     }
     for (key, val) in &profile.env {
         cmd.env(key, val);
     }
-    let _ = cmd.spawn();
+    cmd.spawn().map(|_| ()).map_err(|e| anyhow::anyhow!("'{}': {}", profile.command, e))
 }
 
 fn default_profiles() -> Vec<LaunchProfile> {
@@ -161,14 +165,14 @@ fn filter_profiles(items: &[LaunchProfile], query: &str) -> Vec<LaunchProfile> {
 fn setup_terminal() -> Result<Terminal<CrosstermBackend<std::io::Stdout>>> {
     enable_raw_mode()?;
     let mut out = stdout();
-    execute!(out, EnterAlternateScreen)?;
+    execute!(out, EnterAlternateScreen, Clear(ClearType::All))?;
     let backend = CrosstermBackend::new(out);
     Ok(Terminal::new(backend)?)
 }
 
 fn restore_terminal(terminal: &mut Terminal<CrosstermBackend<std::io::Stdout>>) -> Result<()> {
     disable_raw_mode()?;
-    execute!(terminal.backend_mut(), LeaveAlternateScreen)?;
+    execute!(terminal.backend_mut(), Clear(ClearType::All), MoveTo(0, 0), LeaveAlternateScreen)?;
     terminal.show_cursor()?;
     Ok(())
 }

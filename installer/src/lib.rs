@@ -3,9 +3,10 @@ use std::{io::stdout, time::Duration};
 use anyhow::Result;
 use core_domain::PackageRecord;
 use crossterm::{
+    cursor::MoveTo,
     event::{self, Event},
     execute,
-    terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
+    terminal::{disable_raw_mode, enable_raw_mode, Clear, ClearType, EnterAlternateScreen, LeaveAlternateScreen},
 };
 use ratatui::{backend::CrosstermBackend, Terminal};
 use runtime_ops::{
@@ -238,14 +239,14 @@ pub fn run(args: &[String]) -> Result<()> {
 fn setup_terminal() -> Result<Terminal<CrosstermBackend<std::io::Stdout>>> {
     enable_raw_mode()?;
     let mut out = stdout();
-    execute!(out, EnterAlternateScreen)?;
+    execute!(out, EnterAlternateScreen, Clear(ClearType::All))?;
     let backend = CrosstermBackend::new(out);
     Ok(Terminal::new(backend)?)
 }
 
 fn restore_terminal(terminal: &mut Terminal<CrosstermBackend<std::io::Stdout>>) -> Result<()> {
     disable_raw_mode()?;
-    execute!(terminal.backend_mut(), LeaveAlternateScreen)?;
+    execute!(terminal.backend_mut(), Clear(ClearType::All), MoveTo(0, 0), LeaveAlternateScreen)?;
     terminal.show_cursor()?;
     Ok(())
 }
