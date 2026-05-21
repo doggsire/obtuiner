@@ -1,0 +1,12 @@
+[package]
+name = "updater"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+anyhow.workspace = true
+crossterm.workspace = true
+ratatui.workspace = true
+core_domain = { path = "../core_domain" }
+runtime_ops = { path = "../runtime_ops" }
+tui_kit = { path = "../tui_kit" }
