@@ -676,6 +676,40 @@ fn parse_desktop_file(path: &std::path::Path) -> Option<LaunchProfile> {
     })
 }
 
+// ── PATH command discovery (for launcher command mode) ────────────────────
+
+/// Return a sorted, deduplicated list of executable names found in PATH.
+pub fn discover_path_commands() -> Vec<String> {
+    let path_var = std::env::var("PATH").unwrap_or_default();
+    let mut seen = std::collections::HashSet::new();
+    let mut names: Vec<String> = Vec::new();
+    for dir in path_var.split(':') {
+        let dir = std::path::Path::new(dir);
+        let Ok(entries) = std::fs::read_dir(dir) else {
+            continue;
+        };
+        for entry in entries.flatten() {
+            let path = entry.path();
+            // Keep only regular files (or symlinks to them) that are executable.
+            let Ok(meta) = path.metadata() else { continue };
+            if !meta.is_file() {
+                continue;
+            }
+            use std::os::unix::fs::PermissionsExt;
+            if meta.permissions().mode() & 0o111 == 0 {
+                continue;
+            }
+            if let Some(name) = path.file_name().and_then(|n| n.to_str()) {
+                if seen.insert(name.to_string()) {
+                    names.push(name.to_string());
+                }
+            }
+        }
+    }
+    names.sort();
+    names
+}
+
 // ── Update discovery ───────────────────────────────────────────────────────
 
 /// Check for available pacman updates, returns package names.
