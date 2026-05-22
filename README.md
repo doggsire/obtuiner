@@ -3,7 +3,7 @@
 A Rust workspace that bundles three Linux-focused terminal tools behind one CLI:
 
 - installer: search, install, and uninstall packages
-- launcher: manage and launch app profiles
+- launcher: manage and launch app profiles; type `>` to search and run PATH commands
 - updater: run full-system or per-package updates
 
 The root binary dispatches to one of those tools:
@@ -24,6 +24,7 @@ The root binary dispatches to one of those tools:
 - Flatpak integration when available
 - Dry-run mode for installer/updater command preview
 - Launcher profile persistence to JSON
+- Launcher command mode: prefix query with `>` to search PATH executables and run them as `>command [args...]`
 
 ## Workspace Layout
 
