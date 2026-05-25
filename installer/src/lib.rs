@@ -36,7 +36,7 @@ pub fn run(args: &[String]) -> Result<()> {
     let mut search_pending = false;
     let manager_status = format!(" | {}", manager_summary(&managers));
     let status_default = format!(
-        "Installer | Tab: focus | Enter: install | q: quit{}{}",
+        "Installer | Tab: focus | Enter: install | Esc: quit{}{}",
         manager_status,
         if dry_run { " [DRY RUN]" } else { "" }
     );

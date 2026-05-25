@@ -11,7 +11,7 @@ use crossterm::{
 use ratatui::{backend::CrosstermBackend, Terminal};
 use tui_kit::
     {handle_common_key, render_layout,
-    CommonAction, LayoutData, SharedState};
+    CommonAction, FocusPane, LayoutData, SharedState};
 use runtime_ops::{discover_installed_apps, discover_path_commands};
 
 // ── Query mode ─────────────────────────────────────────────────────────────
@@ -37,10 +37,6 @@ pub fn run(_args: &[String]) -> Result<()> {
 
     // Load persisted profiles
     let mut saved_profiles = load_profiles().unwrap_or_default();
-    if saved_profiles.is_empty() {
-        saved_profiles = default_profiles();
-        let _ = save_profiles(&saved_profiles);
-    }
     // Merge in discovered installed apps (saved profiles take precedence by name)
     let saved_names: HashSet<String> = saved_profiles
         .iter()
@@ -56,7 +52,7 @@ pub fn run(_args: &[String]) -> Result<()> {
     // Discover PATH commands once at startup.
     let path_commands = discover_path_commands();
 
-    let mut status = "Launcher | Enter: launch | n: new profile | d: delete | q: quit | >: command mode".to_string();
+    let mut status = "Launcher | Enter: launch | n: new profile | d: delete | Esc: quit | >: command mode".to_string();
 
     loop {
         let mode = parse_query(&state.query);
@@ -144,7 +140,7 @@ pub fn run(_args: &[String]) -> Result<()> {
             let event = event::read()?;
             if let Event::Key(key) = event {
                 match key.code {
-                    KeyCode::Char('d') if !is_command_mode => {
+                    KeyCode::Char('d') if !is_command_mode && state.focus != FocusPane::Search => {
                         if let Some(profile) = filtered_profiles.get(state.selected) {
                             let name = profile.name.clone();
                             profiles.retain(|p| p.name != name);
@@ -209,25 +205,6 @@ fn launch_command_line(line: &str) -> Result<()> {
     cmd.args(&args);
     cmd.process_group(0);
     cmd.spawn().map(|_| ()).map_err(|e| anyhow::anyhow!("'{}': {}", command, e))
-}
-
-fn default_profiles() -> Vec<LaunchProfile> {
-    vec![
-        LaunchProfile {
-            name: "Terminal".to_string(),
-            command: "xterm".to_string(),
-            args: vec![],
-            env: vec![],
-            working_dir: String::new(),
-        },
-        LaunchProfile {
-            name: "VS Code".to_string(),
-            command: "code".to_string(),
-            args: vec![],
-            env: vec![],
-            working_dir: String::new(),
-        },
-    ]
 }
 
 fn filter_profiles(items: &[LaunchProfile], query: &str) -> Vec<LaunchProfile> {

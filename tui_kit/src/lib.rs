@@ -56,7 +56,7 @@ pub struct LayoutData<'a> {
 
 pub fn handle_common_key(state: &mut SharedState, key: KeyEvent, max_items: usize) -> CommonAction {
     match key.code {
-        KeyCode::Char('q') => CommonAction::Quit,
+        KeyCode::Esc => CommonAction::Quit,
         KeyCode::Tab => {
             state.focus = state.focus.next();
             CommonAction::None
@@ -186,7 +186,7 @@ pub enum ModalChoice {
 pub fn handle_modal_key(key: KeyEvent) -> ModalChoice {
     match key.code {
         KeyCode::Enter | KeyCode::Char('y') | KeyCode::Char('Y') => ModalChoice::Confirmed,
-        KeyCode::Esc | KeyCode::Char('n') | KeyCode::Char('N') | KeyCode::Char('q') => {
+        KeyCode::Esc | KeyCode::Char('n') | KeyCode::Char('N') => {
             ModalChoice::Cancelled
         }
         _ => ModalChoice::Pending,
