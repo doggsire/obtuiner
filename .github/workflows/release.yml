@@ -43,8 +43,9 @@ jobs:
         run: |
           BIN=obtuiner
           ARCHIVE="obtuiner-${{ github.ref_name }}-${{ matrix.target }}.tar.gz"
-          cp "target/${{ matrix.target }}/release/$BIN" .
-          tar -czf "$ARCHIVE" "$BIN"
+          mkdir -p staging
+          cp "target/${{ matrix.target }}/release/$BIN" "staging/$BIN"
+          tar -czf "$ARCHIVE" -C staging "$BIN"
           sha256sum "$ARCHIVE" > "$ARCHIVE.sha256"
           echo "ARCHIVE=$ARCHIVE" >> "$GITHUB_ENV"
 
