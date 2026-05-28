@@ -382,11 +382,26 @@ pub fn query_dnf(query: &str) -> Vec<PackageRecord> {
             stderr: Vec::new(),
         });
 
+    // DNF search --quiet output format (Fedora):
+    //   Matched fields: name (exact), summary
+    //    firefox.x86_64 Mozilla Firefox Web browser
+    //    browserpass-firefox.x86_64     Native component for the Firefox extension
+    // Each result line is indented; header lines start with "Matched fields".
     String::from_utf8_lossy(&output.stdout)
         .lines()
         .filter_map(|line| {
-            let (name_part, desc) = line.split_once(" : ")?;
-            let name = name_part.trim().split('.').next().unwrap_or("").trim();
+            // Skip section headers and blank lines
+            let trimmed = line.trim_start();
+            if trimmed.is_empty() || trimmed.starts_with("Matched fields") {
+                return None;
+            }
+            // Split on first whitespace: "name.arch  description"
+            let (name_arch, desc) = trimmed.split_once(' ')?;
+            // Strip the trailing architecture suffix (last ".component")
+            let name = match name_arch.rsplit_once('.') {
+                Some((base, _arch)) => base,
+                None => name_arch,
+            };
             if name.is_empty() {
                 return None;
             }
