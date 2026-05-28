@@ -1,0 +1,47 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+'
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build ${{ matrix.target }}
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        target:
+          - x86_64-unknown-linux-gnu
+          - aarch64-unknown-linux-gnu
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - uses: cross-rs/cross-action@v0.1
+        with:
+          command: build
+          target: ${{ matrix.target }}
+          args: --release -p obtuiner
+
+      - name: Package binary
+        run: |
+          BIN=obtuiner
+          ARCHIVE="obtuiner-${{ github.ref_name }}-${{ matrix.target }}.tar.gz"
+          cp "target/${{ matrix.target }}/release/$BIN" .
+          tar -czf "$ARCHIVE" "$BIN"
+          sha256sum "$ARCHIVE" > "$ARCHIVE.sha256"
+          echo "ARCHIVE=$ARCHIVE" >> "$GITHUB_ENV"
+
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            ${{ env.ARCHIVE }}
+            ${{ env.ARCHIVE }}.sha256

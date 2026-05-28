@@ -36,9 +36,69 @@ The root binary dispatches to one of those tools:
 - core_domain: shared models and persistence helpers
 - tui_kit: shared TUI rendering and key handling
 
+## Install
+
+### One-liner (recommended)
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/doggsire/obtuiner/main/install.sh | sh
+```
+
+Or download and inspect before running:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/doggsire/obtuiner/main/install.sh -o install.sh
+less install.sh
+sh install.sh
+```
+
+The script:
+- Detects your CPU architecture (x86\_64, aarch64)
+- Downloads the prebuilt binary and its SHA256 checksum from the [latest release](https://github.com/doggsire/obtuiner/releases/latest)
+- Verifies the checksum before installing
+- Installs to `/usr/local/bin` (or `~/.local/bin` if `/usr/local/bin` is not writable)
+
+After install, run from anywhere:
+
+```bash
+obtuiner installer
+obtuiner launcher
+obtuiner updater
+```
+
+### Manual binary install
+
+Download the archive for your platform from the [latest release](https://github.com/doggsire/obtuiner/releases/latest), verify the checksum, and copy the binary to your PATH:
+
+```bash
+# Example for x86_64
+ARCHIVE=obtuiner-vX.Y.Z-x86_64-unknown-linux-gnu.tar.gz
+curl -LO "https://github.com/doggsire/obtuiner/releases/latest/download/$ARCHIVE"
+curl -LO "https://github.com/doggsire/obtuiner/releases/latest/download/$ARCHIVE.sha256"
+sha256sum -c "$ARCHIVE.sha256"
+tar -xzf "$ARCHIVE"
+sudo mv obtuiner /usr/local/bin/
+```
+
+### Build from source
+
+Requires a [Rust toolchain](https://rustup.rs).
+
+```bash
+git clone https://github.com/doggsire/obtuiner.git
+cd obtuiner
+cargo build --release
+sudo cp target/release/obtuiner /usr/local/bin/
+```
+
+Or install into `~/.cargo/bin` directly:
+
+```bash
+cargo install --path obtuiner
+```
+
 ## Requirements
 
-- Rust toolchain (stable) with Cargo
 - Linux environment
 - At least one supported package manager installed
 
@@ -47,58 +107,6 @@ Optional but recommended:
 - sudo privileges for system package operations
 - flatpak for Flatpak install/update support
 - paru or yay for AUR support on Arch-based systems
-
-## Build
-
-From repository root:
-
-```bash
-cargo build
-```
-
-Release build:
-
-```bash
-cargo build --release
-```
-
-## Install To bin
-
-Install the CLI into your Cargo bin directory (usually ~/.cargo/bin):
-
-```bash
-cargo install --path obtuiner
-```
-
-After install, run it from anywhere:
-
-```bash
-obtuiner installer
-obtuiner launcher
-obtuiner updater
-```
-
-Short forms:
-
-```bash
-obtuiner -i
-obtuiner -l
-obtuiner -u
-```
-
-If obtuiner is not found, add Cargo bin to your PATH:
-
-```bash
-export PATH="$HOME/.cargo/bin:$PATH"
-```
-
-Persist that in your shell profile (~/.bashrc or ~/.zshrc) and reload the shell.
-
-Optional: install to a custom root (creates <root>/bin/obtuiner):
-
-```bash
-cargo install --path obtuiner --root /some/custom/prefix
-```
 
 ## Run
 
