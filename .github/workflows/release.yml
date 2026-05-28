@@ -9,8 +9,20 @@ permissions:
   contents: write
 
 jobs:
+  license-check:
+    name: License check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Install cargo-deny
+        run: cargo install cargo-deny --locked
+      - name: Check licenses
+        run: cargo deny check licenses
+
   build:
     name: Build ${{ matrix.target }}
+    needs: license-check
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
