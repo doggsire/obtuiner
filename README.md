@@ -110,7 +110,32 @@ Optional but recommended:
 
 ## Run
 
-Run through the unified CLI:
+If installed (via release binary or install script), run through the unified CLI:
+
+```bash
+obtuiner installer
+obtuiner launcher
+obtuiner updater
+```
+
+Short aliases:
+
+```bash
+obtuiner -i
+obtuiner -l
+obtuiner -u
+```
+
+Dry-run mode (where supported):
+
+```bash
+obtuiner installer --dry-run
+obtuiner updater --dry-run
+```
+
+### Run from source (development)
+
+If you are working from a local clone without installing the binary, use Cargo:
 
 ```bash
 cargo run -p obtuiner -- installer
