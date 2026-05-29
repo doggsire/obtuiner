@@ -10,6 +10,29 @@ The reason it's a TUI comes down to portability. The terminal app runs the same 
 
 **How I use it:** I have two keybindings in my window manager — one that opens a terminal and drops straight into `obtuiner launcher`, and one that opens a terminal and runs `obtuiner updater` followed by `obtuiner installer`. It works pretty much the same everywhere I run Linux.
 
+The snippet below is from my Hyprland config — use it as a reference and adjust to fit your own setup (terminal app, modifier key, binary path, etc.):
+
+```hyprlang
+# Opens a terminal window with the Obtuiner WM_CLASS set, running the obtuiner binary
+$obtuiner = $terminal --class=Obtuiner -e /home/doggsire/.cargo/bin/obtuiner
+
+# Super+Space  → open the launcher
+bind = $mainMod, SPACE, exec, $obtuiner -l
+# Super+Alt+Space → run the updater, then open the installer when it finishes
+bind = $mainMod ALT, SPACE, exec, sh -c "$obtuiner -u; $obtuiner -i"
+
+windowrule {
+    name = obtuiner
+    # Target any window whose class is "Obtuiner" (set by --class above)
+    match:class = Obtuiner
+
+    float = true        # keep it floating above other windows
+    size = 800 600      # fixed size in pixels
+    move = 50% 50%      # centre it on the screen
+}
+```
+
+
 ![obtuiner launcher screenshot](assets/screenshot.png)
 
 ---
