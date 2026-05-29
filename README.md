@@ -2,6 +2,16 @@
 
 Development note: AI tools were used during the creation of this app.
 
+## Why obtuiner?
+
+A few projects got really close to what I wanted — [rofi](https://github.com/davatorium/rofi), [walker](https://github.com/abenz1267/walker), and [pacseek](https://github.com/moson-mo/pacseek) are all great, but each one solved a different piece of the puzzle without covering the whole thing. I wanted a launcher *and* a package manager *and* an updater, all in one place and all in the same style.
+
+The reason it's a TUI comes down to portability. The terminal app runs the same whether you're on Wayland, X11, or a plain TTY — no compositor-specific hacks, no display server assumptions, just works. And since it shells out to the package managers already running on your system, there's no need for a lot of complexity under the hood. Adding support for a new distro basically just means knowing what commands it uses.
+
+**How I use it:** I have two keybindings in my window manager — one that opens a terminal and drops straight into `obtuiner launcher`, and one that opens a terminal and runs `obtuiner updater` followed by `obtuiner installer`. It works pretty much the same everywhere I run Linux.
+
+---
+
 A Rust workspace that bundles three Linux-focused terminal tools behind one CLI:
 
 - installer: search, install, and uninstall packages
