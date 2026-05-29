@@ -1,5 +1,7 @@
 # obtuiner
 
+Development note: AI tools were used during the creation of this app.
+
 A Rust workspace that bundles three Linux-focused terminal tools behind one CLI:
 
 - installer: search, install, and uninstall packages
@@ -18,7 +20,7 @@ The root binary dispatches to one of those tools:
 - Automatic package manager detection
 - Supports native managers:
   - pacman (+ optional AUR helper: paru/yay)
-  - apt or nala
+  - apt (nala optional)
   - dnf
   - zypper
 - Flatpak integration when available
@@ -41,13 +43,13 @@ The root binary dispatches to one of those tools:
 ### One-liner (recommended)
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/doggsire/obtuiner/main/install.sh | sh
+curl -fsSL https://github.com/doggsire/obtuiner/releases/latest/download/install.sh | sh
 ```
 
 Or download and inspect before running:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/doggsire/obtuiner/main/install.sh -o install.sh
+curl -fsSL https://github.com/doggsire/obtuiner/releases/latest/download/install.sh -o install.sh
 less install.sh
 sh install.sh
 ```
@@ -57,14 +59,6 @@ The script:
 - Downloads the prebuilt binary and its SHA256 checksum from the [latest release](https://github.com/doggsire/obtuiner/releases/latest)
 - Verifies the checksum before installing
 - Installs to `/usr/local/bin` (or `~/.local/bin` if `/usr/local/bin` is not writable)
-
-After install, run from anywhere:
-
-```bash
-obtuiner installer
-obtuiner launcher
-obtuiner updater
-```
 
 ### Manual binary install
 
@@ -97,6 +91,14 @@ Or install into `~/.cargo/bin` directly:
 cargo install --path obtuiner
 ```
 
+After install, run from anywhere:
+
+```bash
+obtuiner installer
+obtuiner launcher
+obtuiner updater
+```
+
 ## Requirements
 
 - Linux environment
@@ -105,12 +107,13 @@ cargo install --path obtuiner
 Optional but recommended:
 
 - sudo privileges for system package operations
+- nala for apt-based systems, if you prefer it over apt
 - flatpak for Flatpak install/update support
 - paru or yay for AUR support on Arch-based systems
 
 ## Run
 
-If installed (via release binary or install script), run through the unified CLI:
+After installing from source, run through the unified CLI:
 
 ```bash
 obtuiner installer
@@ -185,5 +188,6 @@ cargo test --workspace
 ## Notes
 
 - This project is currently Linux-oriented.
+- AI tools were used during the creation of this app.
 - Command execution depends on tools available on your machine.
 - Some package actions may prompt for credentials depending on your sudo configuration.
