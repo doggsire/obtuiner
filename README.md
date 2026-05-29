@@ -187,3 +187,9 @@ cargo test --workspace
 - This project is currently Linux-oriented.
 - Command execution depends on tools available on your machine.
 - Some package actions may prompt for credentials depending on your sudo configuration.
+
+## License
+
+Copyright 2026 doggsire
+
+Licensed under the [Apache License, Version 2.0](LICENSE). You may not use this project except in compliance with the License. See the [NOTICE](NOTICE) file for attribution details.
