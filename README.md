@@ -10,6 +10,8 @@ The reason it's a TUI comes down to portability. The terminal app runs the same 
 
 **How I use it:** I have two keybindings in my window manager — one that opens a terminal and drops straight into `obtuiner launcher`, and one that opens a terminal and runs `obtuiner updater` followed by `obtuiner installer`. It works pretty much the same everywhere I run Linux.
 
+![obtuiner launcher screenshot](assets/screenshot.png)
+
 ---
 
 A Rust workspace that bundles three Linux-focused terminal tools behind one CLI:
