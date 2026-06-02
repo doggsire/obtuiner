@@ -225,7 +225,7 @@ pub fn run(args: &[String]) -> Result<()> {
                                     }
                                 }
                             }
-                            CommonAction::None => {}
+                            CommonAction::None | CommonAction::CompleteSelected => {}
                         }
                     }
                 }
