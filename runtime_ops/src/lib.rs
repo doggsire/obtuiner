@@ -371,6 +371,23 @@ pub fn query_apt(query: &str) -> Vec<PackageRecord> {
         .collect()
 }
 
+/// Return the set of currently-installed RPM package names (used by DNF systems).
+fn rpm_installed_set() -> std::collections::HashSet<String> {
+    let output = Command::new("rpm")
+        .args(["-qa", "--queryformat", "%{NAME}\n"])
+        .stdout(Stdio::piped())
+        .stderr(Stdio::null())
+        .output();
+    let Ok(out) = output else {
+        return std::collections::HashSet::new();
+    };
+    String::from_utf8_lossy(&out.stdout)
+        .lines()
+        .map(|l| l.trim().to_string())
+        .filter(|l| !l.is_empty())
+        .collect()
+}
+
 /// Query dnf for packages matching query.
 pub fn query_dnf(query: &str) -> Vec<PackageRecord> {
     let output = Command::new("dnf")
@@ -381,6 +398,8 @@ pub fn query_dnf(query: &str) -> Vec<PackageRecord> {
             stdout: Vec::new(),
             stderr: Vec::new(),
         });
+
+    let installed = rpm_installed_set();
 
     // DNF search --quiet output format (Fedora):
     //   Matched fields: name (exact), summary
@@ -405,11 +424,12 @@ pub fn query_dnf(query: &str) -> Vec<PackageRecord> {
             if name.is_empty() {
                 return None;
             }
+            let is_installed = installed.contains(name);
             Some(PackageRecord {
                 name: name.to_string(),
                 source: PackageSource::Dnf,
                 description: desc.trim().to_string(),
-                installed: false,
+                installed: is_installed,
             })
         })
         .collect()
