@@ -8,13 +8,15 @@ A few projects got really close to what I wanted — [rofi](https://github.com/d
 
 The reason it's a TUI comes down to portability. The terminal app runs the same whether you're on Wayland, X11, or a plain TTY — no compositor-specific hacks, no display server assumptions, just works. And since it shells out to the package managers already running on your system, there's no need for a lot of complexity under the hood. Adding support for a new distro basically just means knowing what commands it uses.
 
+## Example keybind configuration
+
 **How I use it:** I have two keybindings in my window manager — one that opens a terminal and drops straight into `obtuiner launcher`, and one that opens a terminal and runs `obtuiner updater` followed by `obtuiner installer`. It works pretty much the same everywhere I run Linux.
 
-The snippet below is from my Hyprland config — use it as a reference and adjust to fit your own setup (terminal app, modifier key, binary path, etc.):
+**Hyprland:** The snippet below is from my Hyprland config — use it as a reference and adjust to fit your own setup (terminal app, modifier key, binary path, etc.):
 
 ```hyprlang
 # Opens a terminal window with the Obtuiner WM_CLASS set, running the obtuiner binary
-$obtuiner = $terminal --class=Obtuiner -e /home/doggsire/.cargo/bin/obtuiner
+$obtuiner = $terminal --class=Obtuiner -e /home/$HOME$/.local/bin/obtuiner
 
 # Super+Space  → open the launcher
 bind = $mainMod, SPACE, exec, $obtuiner -l
