@@ -16,7 +16,7 @@ The reason it's a TUI comes down to portability. The terminal app runs the same 
 
 ```hyprlang
 # Opens a terminal window with the Obtuiner WM_CLASS set, running the obtuiner binary
-$obtuiner = $terminal --class=Obtuiner -e /home/$HOME$/.local/bin/obtuiner
+$obtuiner = $terminal --class=Obtuiner -e obtuiner
 
 # Super+Space  → open the launcher
 bind = $mainMod, SPACE, exec, $obtuiner -l
