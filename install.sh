@@ -54,9 +54,9 @@ echo "Verifying checksum..."
 tar -xzf "$TMP/$ARCHIVE" -C "$TMP"
 
 # ── Choose install location ────────────────────────────────────────────────────
-if [ -w /usr/bin ]; then
+if [ -d /usr/bin ]; then
 INSTALL_DIR=/usr/bin
-elif [ -w /usr/local/bin ]; then
+elif [ -d /usr/local/bin ]; then
 INSTALL_DIR=/usr/local/bin
 elif [ -d "$HOME/.local/bin" ]; then
 INSTALL_DIR="$HOME/.local/bin"
