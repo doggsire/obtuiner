@@ -33,6 +33,28 @@ windowrule {
     move = 50% 50%      # centre it on the screen
 }
 ```
+Or in the new lua syntax
+
+```lua
+# Opens a terminal window with the Obtuiner WM_CLASS set, running the obtuiner binary
+local menu        = (terminal .. " --class=Obtuiner -e obtuiner")
+
+# Super+Space  → open the launcher
+hl.bind(mainMod .. " + space", hl.dsp.exec_cmd(menu .. " -l"))
+# Super+Alt+Space → run the updater, then open the installer when it finishes
+hl.bind(mainMod .. " + ALT + space", hl.dsp.exec_cmd('sh -c "' .. menu .. ' -u; ' .. menu .. ' -i"'))
+
+hl.window_rule ({
+	name = "obtuiner",
+	match = {
+    	class = "Obtuiner",
+	},
+
+		float = true,
+		size = { 800, 600 },
+		move = { "50%", "50%" },
+})
+```
 
 
 ![obtuiner launcher screenshot](assets/screenshot.png)
