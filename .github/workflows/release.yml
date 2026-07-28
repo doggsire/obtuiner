@@ -47,20 +47,26 @@ jobs:
         run: sudo apt-get install -y ${{ matrix.apt_pkg }}
 
       - name: Build
-        run: cargo build --release -p obtuiner --target ${{ matrix.target }}
+        run: cargo build --release -p obtuiner -p powermenu --target ${{ matrix.target }}
         env:
           CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER: ${{ matrix.linker }}
 
-      - name: Package binary
+      - name: Package binaries
         id: package
         run: |
-          BIN=obtuiner
+          MAIN_BIN=obtuiner
+          PLUGIN_BIN=obtuiner-powermenu
           ARCHIVE="obtuiner-${{ github.ref_name }}-${{ matrix.target }}.tar.gz"
+          PLUGIN_ARCHIVE="obtuiner-powermenu-${{ github.ref_name }}-${{ matrix.target }}.tar.gz"
           mkdir -p staging
-          cp "target/${{ matrix.target }}/release/$BIN" "staging/$BIN"
-          tar -czf "$ARCHIVE" -C staging "$BIN"
+          cp "target/${{ matrix.target }}/release/$MAIN_BIN" "staging/$MAIN_BIN"
+          cp "target/${{ matrix.target }}/release/$PLUGIN_BIN" "staging/$PLUGIN_BIN"
+          tar -czf "$ARCHIVE" -C staging "$MAIN_BIN"
+          tar -czf "$PLUGIN_ARCHIVE" -C staging "$PLUGIN_BIN"
           sha256sum "$ARCHIVE" > "$ARCHIVE.sha256"
+          sha256sum "$PLUGIN_ARCHIVE" > "$PLUGIN_ARCHIVE.sha256"
           echo "ARCHIVE=$ARCHIVE" >> "$GITHUB_OUTPUT"
+          echo "PLUGIN_ARCHIVE=$PLUGIN_ARCHIVE" >> "$GITHUB_OUTPUT"
 
       - name: Upload binary release assets
         uses: softprops/action-gh-release@v2
@@ -68,6 +74,8 @@ jobs:
           files: |
             ${{ steps.package.outputs.ARCHIVE }}
             ${{ steps.package.outputs.ARCHIVE }}.sha256
+            ${{ steps.package.outputs.PLUGIN_ARCHIVE }}
+            ${{ steps.package.outputs.PLUGIN_ARCHIVE }}.sha256
 
       - name: Upload install script (x86_64 job only)
         if: matrix.target == 'x86_64-unknown-linux-gnu'

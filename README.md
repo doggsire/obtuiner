@@ -125,9 +125,9 @@ sh install.sh
 
 The script:
 - Detects your CPU architecture (x86\_64, aarch64)
-- Downloads the prebuilt binary and its SHA256 checksum from the [latest release](https://github.com/doggsire/obtuiner/releases/latest)
-- Verifies the checksum before installing
-- Installs to `/usr/local/bin` (or `~/.local/bin` if `/usr/local/bin` is not writable)
+- Downloads the prebuilt `obtuiner` binary (and `obtuiner-powermenu` plugin when available), plus SHA256 checksums, from the [latest release](https://github.com/doggsire/obtuiner/releases/latest)
+- Verifies checksums before installing
+- Installs binaries to a system bin directory (`/usr/bin` or `/usr/local/bin`, depending on availability), or `~/.local/bin`
 
 ### Manual binary install
 
@@ -263,6 +263,8 @@ A valid plugin responds by printing a single-line JSON document (`name`, `aliase
 The `plugin_api` crate defines this contract (`PluginMetadata`, the metadata flag, and the `obtuiner-` naming prefix) and provides `handle_metadata_handshake()` for plugin authors to call at the top of `main()`.
 
 ### Building and installing the powermenu plugin
+
+If you install via `install.sh`, `obtuiner-powermenu` is installed automatically (when the release contains the plugin artifact).
 
 ```bash
 cargo build --release -p powermenu
