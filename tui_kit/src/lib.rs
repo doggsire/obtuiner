@@ -26,6 +26,9 @@ pub enum CommonAction {
     None,
     Quit,
     Activate,
+    /// Space pressed while a result is highlighted — caller should "complete"
+    /// the selected item into the search bar.
+    CompleteSelected,
 }
 
 #[derive(Debug)]
@@ -89,6 +92,17 @@ pub fn handle_common_key(state: &mut SharedState, key: KeyEvent, max_items: usiz
                 state.selected = 0;
             }
             CommonAction::None
+        }
+        KeyCode::Char(' ') => {
+            if state.focus == FocusPane::Search {
+                // In search pane a literal space is just typed normally.
+                state.query.push(' ');
+                CommonAction::None
+            } else if state.focus == FocusPane::Results {
+                CommonAction::CompleteSelected
+            } else {
+                CommonAction::None
+            }
         }
         KeyCode::Char(c) => {
             if state.focus == FocusPane::Search {

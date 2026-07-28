@@ -371,6 +371,23 @@ pub fn query_apt(query: &str) -> Vec<PackageRecord> {
         .collect()
 }
 
+/// Return the set of currently-installed RPM package names (used by DNF systems).
+fn rpm_installed_set() -> std::collections::HashSet<String> {
+    let output = Command::new("rpm")
+        .args(["-qa", "--queryformat", "%{NAME}\n"])
+        .stdout(Stdio::piped())
+        .stderr(Stdio::null())
+        .output();
+    let Ok(out) = output else {
+        return std::collections::HashSet::new();
+    };
+    String::from_utf8_lossy(&out.stdout)
+        .lines()
+        .map(|l| l.trim().to_string())
+        .filter(|l| !l.is_empty())
+        .collect()
+}
+
 /// Query dnf for packages matching query.
 pub fn query_dnf(query: &str) -> Vec<PackageRecord> {
     let output = Command::new("dnf")
@@ -381,6 +398,8 @@ pub fn query_dnf(query: &str) -> Vec<PackageRecord> {
             stdout: Vec::new(),
             stderr: Vec::new(),
         });
+
+    let installed = rpm_installed_set();
 
     // DNF search --quiet output format (Fedora):
     //   Matched fields: name (exact), summary
@@ -405,11 +424,12 @@ pub fn query_dnf(query: &str) -> Vec<PackageRecord> {
             if name.is_empty() {
                 return None;
             }
+            let is_installed = installed.contains(name);
             Some(PackageRecord {
                 name: name.to_string(),
                 source: PackageSource::Dnf,
                 description: desc.trim().to_string(),
-                installed: false,
+                installed: is_installed,
             })
         })
         .collect()
@@ -723,6 +743,161 @@ pub fn discover_path_commands() -> Vec<String> {
     }
     names.sort();
     names
+}
+
+// ── Argument completion ────────────────────────────────────────────────────
+
+/// Complete arguments for a command given the tokens already typed.
+///
+/// Only the **last** whitespace-separated token is completed; everything
+/// before it is left untouched by the caller.
+///
+/// Strategy:
+///  1. Run `<cmd> --help` (or `<cmd> -h`) and parse lines that look like flags
+///     (`-x`, `--foo`, `--foo=…`).  These are offered when the last token
+///     starts with `-`.
+///  2. Otherwise do filesystem path completion on the last token.
+///
+/// Returns a list of candidate strings for the last token.
+pub fn complete_args(cmd: &str, args: &str) -> Vec<String> {
+    // Extract only the last token being typed.
+    // If args ends with whitespace the user just started a new token → prefix is empty.
+    let last_token = if args.ends_with(|c: char| c.is_whitespace()) {
+        ""
+    } else {
+        args.split_whitespace().last().unwrap_or("")
+    };
+
+    if last_token.starts_with('-') {
+        // Flag completion via --help
+        let flags = parse_flags_from_help(cmd);
+        let p = last_token.to_lowercase();
+        return flags
+            .into_iter()
+            .filter(|f| f.to_lowercase().starts_with(&p))
+            .collect();
+    }
+
+    // Filesystem completion on the last token
+    complete_path(last_token)
+}
+
+fn parse_flags_from_help(cmd: &str) -> Vec<String> {
+    // Try --help first, fall back to -h; some programs print to stderr.
+    let try_help = |arg: &str| -> Option<String> {
+        let out = Command::new(cmd)
+            .arg(arg)
+            .stdin(Stdio::null()) // don't inherit the raw-mode terminal
+            .stdout(Stdio::piped())
+            .stderr(Stdio::piped())
+            .output()
+            .ok()?;
+        let combined = [out.stdout, out.stderr].concat();
+        Some(String::from_utf8_lossy(&combined).into_owned())
+    };
+
+    let text = try_help("--help")
+        .or_else(|| try_help("-h"))
+        .unwrap_or_default();
+
+    let mut flags: std::collections::HashSet<String> = std::collections::HashSet::new();
+    for word in text.split_whitespace() {
+        if word.starts_with("--") && word.len() > 2 {
+            // Extract strictly: stop at the first '=' or any character that isn't
+            // alphanumeric or '-'.  This ensures words like "--foo;;" or "--bar;baz"
+            // never end up as flag completions that would break the shell.
+            let name_part = &word[2..];
+            let name_end = name_part
+                .find(|c: char| c == '=' || (!c.is_ascii_alphanumeric() && c != '-'))
+                .unwrap_or(name_part.len());
+            let name = &name_part[..name_end];
+            if !name.is_empty() {
+                flags.insert(format!("--{}", name));
+            }
+        } else if word.starts_with('-') && !word.starts_with("--") {
+            // Single-letter flags: take only the first character after '-'.
+            if let Some(c) = word[1..].chars().next() {
+                if c.is_ascii_alphabetic() {
+                    flags.insert(format!("-{}", c));
+                }
+            }
+        }
+    }
+
+    let mut v: Vec<String> = flags.into_iter().collect();
+    v.sort();
+    v
+}
+
+/// Return all flags advertised by `cmd --help` / `cmd -h`, strictly validated.
+pub fn get_command_flags(cmd: &str) -> Vec<String> {
+    parse_flags_from_help(cmd)
+}
+
+/// Filesystem path completions for the given prefix string.
+pub fn complete_path_prefix(prefix: &str) -> Vec<String> {
+    complete_path(prefix)
+}
+
+fn complete_path(prefix: &str) -> Vec<String> {
+    use std::path::Path;
+
+    // Expand a leading `~` to the home directory.
+    let expanded: std::borrow::Cow<str> = if prefix.starts_with('~') {
+        if let Some(home) = std::env::var_os("HOME") {
+            let rest = &prefix[1..];
+            std::borrow::Cow::Owned(format!("{}{}", home.to_string_lossy(), rest))
+        } else {
+            std::borrow::Cow::Borrowed(prefix)
+        }
+    } else {
+        std::borrow::Cow::Borrowed(prefix)
+    };
+
+    let (dir, file_prefix) = if expanded.ends_with('/') {
+        (expanded.as_ref(), "")
+    } else {
+        let p = Path::new(expanded.as_ref());
+        let parent = p.parent().map(|p| p.to_str().unwrap_or(".")).unwrap_or(".");
+        let stem = p.file_name().and_then(|n| n.to_str()).unwrap_or("");
+        (parent, stem)
+    };
+
+    let read_dir = if dir.is_empty() { "." } else { dir };
+    let Ok(entries) = std::fs::read_dir(read_dir) else {
+        return vec![];
+    };
+
+    let mut results: Vec<String> = entries
+        .flatten()
+        .filter_map(|e| {
+            let name = e.file_name();
+            let name_str = name.to_str()?;
+            if !name_str.starts_with(file_prefix) {
+                return None;
+            }
+            let is_dir = e.file_type().map(|t| t.is_dir()).unwrap_or(false);
+            // Build the full path the way the user would type it
+            let full = if dir == "." && !expanded.contains('/') {
+                if is_dir {
+                    format!("{}/", name_str)
+                } else {
+                    name_str.to_string()
+                }
+            } else {
+                let sep = if dir.ends_with('/') { "" } else { "/" };
+                if is_dir {
+                    format!("{}{}{}/", dir, sep, name_str)
+                } else {
+                    format!("{}{}{}", dir, sep, name_str)
+                }
+            };
+            Some(full)
+        })
+        .collect();
+
+    results.sort();
+    results
 }
 
 // ── Update discovery ───────────────────────────────────────────────────────

@@ -1,6 +1,67 @@
 # obtuiner
 
-A Rust workspace that bundles three Linux-focused terminal tools behind one CLI, plus an external plugin system for adding more:
+Development note: AI tools were used during the creation of this app.
+
+## Why obtuiner?
+
+A few projects got really close to what I wanted — [rofi](https://github.com/davatorium/rofi), [walker](https://github.com/abenz1267/walker), and [pacseek](https://github.com/moson-mo/pacseek) are all great, but each one solved a different piece of the puzzle without covering the whole thing. I wanted a launcher *and* a package manager *and* an updater, all in one place and all in the same style.
+
+The reason it's a TUI comes down to portability. The terminal app runs the same whether you're on Wayland, X11, or a plain TTY — no compositor-specific hacks, no display server assumptions, just works. And since it shells out to the package managers already running on your system, there's no need for a lot of complexity under the hood. Adding support for a new distro basically just means knowing what commands it uses.
+
+## Example keybind configuration
+
+**How I use it:** I have two keybindings in my window manager — one that opens a terminal and drops straight into `obtuiner launcher`, and one that opens a terminal and runs `obtuiner updater` followed by `obtuiner installer`. It works pretty much the same everywhere I run Linux.
+
+**Hyprland:** The snippet below is from my Hyprland config — use it as a reference and adjust to fit your own setup (terminal app, modifier key, binary path, etc.):
+
+```hyprlang
+# Opens a terminal window with the Obtuiner WM_CLASS set, running the obtuiner binary
+$obtuiner = $terminal --class=Obtuiner -e obtuiner
+
+# Super+Space  → open the launcher
+bind = $mainMod, SPACE, exec, $obtuiner -l
+# Super+Alt+Space → run the updater, then open the installer when it finishes
+bind = $mainMod ALT, SPACE, exec, sh -c "$obtuiner -u; $obtuiner -i"
+
+windowrule {
+    name = obtuiner
+    # Target any window whose class is "Obtuiner" (set by --class above)
+    match:class = Obtuiner
+
+    float = true        # keep it floating above other windows
+    size = 800 600      # fixed size in pixels
+    move = 50% 50%      # centre it on the screen
+}
+```
+Or in the new lua syntax
+
+```lua
+# Opens a terminal window with the Obtuiner WM_CLASS set, running the obtuiner binary
+local menu        = (terminal .. " --class=Obtuiner -e obtuiner")
+
+# Super+Space  → open the launcher
+hl.bind(mainMod .. " + space", hl.dsp.exec_cmd(menu .. " -l"))
+# Super+Alt+Space → run the updater, then open the installer when it finishes
+hl.bind(mainMod .. " + ALT + space", hl.dsp.exec_cmd('sh -c "' .. menu .. ' -u; ' .. menu .. ' -i"'))
+
+hl.window_rule ({
+	name = "obtuiner",
+	match = {
+    	class = "Obtuiner",
+	},
+
+		float = true,
+		size = { 800, 600 },
+		move = { "50%", "50%" },
+})
+```
+
+
+![obtuiner launcher screenshot](assets/screenshot.png)
+
+---
+
+A Rust workspace that bundles three Linux-focused terminal tools behind one CLI:
 
 - installer: search, install, and uninstall packages
 - launcher: manage and launch app profiles; type `>` to search and run PATH commands
@@ -24,7 +85,7 @@ See [Plugins](#plugins) for how plugin discovery works and how to write your own
 - Automatic package manager detection
 - Supports native managers:
   - pacman (+ optional AUR helper: paru/yay)
-  - apt or nala
+  - apt (nala optional)
   - dnf
   - zypper
 - Flatpak integration when available
@@ -51,13 +112,13 @@ See [Plugins](#plugins) for how plugin discovery works and how to write your own
 ### One-liner (recommended)
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/doggsire/obtuiner/main/install.sh | sh
+curl -fsSL https://github.com/doggsire/obtuiner/releases/latest/download/install.sh | sh
 ```
 
 Or download and inspect before running:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/doggsire/obtuiner/main/install.sh -o install.sh
+curl -fsSL https://github.com/doggsire/obtuiner/releases/latest/download/install.sh -o install.sh
 less install.sh
 sh install.sh
 ```
@@ -67,14 +128,6 @@ The script:
 - Downloads the prebuilt binary and its SHA256 checksum from the [latest release](https://github.com/doggsire/obtuiner/releases/latest)
 - Verifies the checksum before installing
 - Installs to `/usr/local/bin` (or `~/.local/bin` if `/usr/local/bin` is not writable)
-
-After install, run from anywhere:
-
-```bash
-obtuiner installer
-obtuiner launcher
-obtuiner updater
-```
 
 ### Manual binary install
 
@@ -107,6 +160,14 @@ Or install into `~/.cargo/bin` directly:
 cargo install --path obtuiner
 ```
 
+After install, run from anywhere:
+
+```bash
+obtuiner installer
+obtuiner launcher
+obtuiner updater
+```
+
 ## Requirements
 
 - Linux environment
@@ -115,12 +176,13 @@ cargo install --path obtuiner
 Optional but recommended:
 
 - sudo privileges for system package operations
+- nala for apt-based systems, if you prefer it over apt
 - flatpak for Flatpak install/update support
 - paru or yay for AUR support on Arch-based systems
 
 ## Run
 
-If installed (via release binary or install script), run through the unified CLI:
+After installing from source, run through the unified CLI:
 
 ```bash
 obtuiner installer
@@ -248,5 +310,12 @@ cargo test --workspace
 ## Notes
 
 - This project is currently Linux-oriented.
+- AI tools were used during the creation of this app.
 - Command execution depends on tools available on your machine.
 - Some package actions may prompt for credentials depending on your sudo configuration.
+
+## License
+
+Copyright 2026 doggsire
+
+Licensed under the [Apache License, Version 2.0](LICENSE). You may not use this project except in compliance with the License. See the [NOTICE](NOTICE) file for attribution details.
