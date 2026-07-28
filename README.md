@@ -112,13 +112,13 @@ See [Plugins](#plugins) for how plugin discovery works and how to write your own
 ### One-liner (recommended)
 
 ```bash
-curl -fsSL https://github.com/doggsire/obtuiner/releases/latest/download/install.sh | sh
+curl -fsSL https://raw.githubusercontent.com/doggsire/obtuiner/main/install.sh | sh
 ```
 
 Or download and inspect before running:
 
 ```bash
-curl -fsSL https://github.com/doggsire/obtuiner/releases/latest/download/install.sh -o install.sh
+curl -fsSL https://raw.githubusercontent.com/doggsire/obtuiner/main/install.sh -o install.sh
 less install.sh
 sh install.sh
 ```
