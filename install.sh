@@ -77,6 +77,11 @@ chmod +x "$DEST"
 
 echo "Installed $BINARY $LATEST to $DEST"
 
+# ── Create plugin folder structure ────────────────────────────────────────────
+PLUGIN_DIR="${XDG_DATA_HOME:-$HOME/.local/share}/ui/plugins"
+mkdir -p "$PLUGIN_DIR"
+echo "Plugin directory: $PLUGIN_DIR"
+
 # ── PATH hint ─────────────────────────────────────────────────────────────────
 case ":$PATH:" in
   *":$INSTALL_DIR:"*) ;;
