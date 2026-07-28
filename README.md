@@ -125,7 +125,7 @@ sh install.sh
 
 The script:
 - Detects your CPU architecture (x86\_64, aarch64)
-- Downloads the prebuilt `obtuiner` binary and `obtuiner-powermenu` plugin (plus SHA256 checksums) from the [latest release](https://github.com/doggsire/obtuiner/releases/latest)
+- Downloads the prebuilt `obtuiner` binary (and `obtuiner-powermenu` plugin when available), plus SHA256 checksums, from the [latest release](https://github.com/doggsire/obtuiner/releases/latest)
 - Verifies checksums before installing
 - Installs binaries to a system bin directory (`/usr/bin` or `/usr/local/bin`, depending on availability), or `~/.local/bin`
 
