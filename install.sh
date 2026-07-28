@@ -3,6 +3,7 @@ set -euo pipefail
 
 REPO="doggsire/obtuiner"
 BINARY="obtuiner"
+PLUGIN_BINARY="obtuiner-powermenu"
 
 # ── Architecture detection ─────────────────────────────────────────────────────
 ARCH=$(uname -m)
@@ -36,6 +37,7 @@ if [ -z "$LATEST" ]; then
 fi
 
 ARCHIVE="${BINARY}-${LATEST}-${TARGET}.tar.gz"
+PLUGIN_ARCHIVE="${PLUGIN_BINARY}-${LATEST}-${TARGET}.tar.gz"
 BASE_URL="https://github.com/$REPO/releases/download/$LATEST"
 
 # ── Download to a temp directory ───────────────────────────────────────────────
@@ -46,12 +48,29 @@ echo "Downloading $ARCHIVE..."
 $FETCH "${BASE_URL}/${ARCHIVE}"        > "$TMP/$ARCHIVE"
 $FETCH "${BASE_URL}/${ARCHIVE}.sha256" > "$TMP/$ARCHIVE.sha256"
 
+echo "Downloading $PLUGIN_ARCHIVE..."
+HAS_PLUGIN_ARCHIVE=true
+if ! $FETCH "${BASE_URL}/${PLUGIN_ARCHIVE}" > "$TMP/$PLUGIN_ARCHIVE"; then
+  HAS_PLUGIN_ARCHIVE=false
+fi
+if $HAS_PLUGIN_ARCHIVE; then
+  if ! $FETCH "${BASE_URL}/${PLUGIN_ARCHIVE}.sha256" > "$TMP/$PLUGIN_ARCHIVE.sha256"; then
+    HAS_PLUGIN_ARCHIVE=false
+  fi
+fi
+
 # ── Verify checksum ────────────────────────────────────────────────────────────
 echo "Verifying checksum..."
 (cd "$TMP" && sha256sum -c "$ARCHIVE.sha256" --quiet)
+if $HAS_PLUGIN_ARCHIVE; then
+  (cd "$TMP" && sha256sum -c "$PLUGIN_ARCHIVE.sha256" --quiet)
+fi
 
 # ── Extract ────────────────────────────────────────────────────────────────────
 tar -xzf "$TMP/$ARCHIVE" -C "$TMP"
+if $HAS_PLUGIN_ARCHIVE; then
+  tar -xzf "$TMP/$PLUGIN_ARCHIVE" -C "$TMP"
+fi
 
 # ── Choose install location ────────────────────────────────────────────────────
 if [ -d /usr/bin ]; then
@@ -67,15 +86,30 @@ fi
 
 # ── Install ────────────────────────────────────────────────────────────────────
 DEST="$INSTALL_DIR/$BINARY"
+PLUGIN_DEST="$INSTALL_DIR/$PLUGIN_BINARY"
 if [ -w "$INSTALL_DIR" ]; then
   mv "$TMP/$BINARY" "$DEST"
+  if $HAS_PLUGIN_ARCHIVE; then
+    mv "$TMP/$PLUGIN_BINARY" "$PLUGIN_DEST"
+  fi
 else
   echo "Need sudo to install to $INSTALL_DIR"
   sudo mv "$TMP/$BINARY" "$DEST"
+  if $HAS_PLUGIN_ARCHIVE; then
+    sudo mv "$TMP/$PLUGIN_BINARY" "$PLUGIN_DEST"
+  fi
 fi
 chmod +x "$DEST"
+if $HAS_PLUGIN_ARCHIVE; then
+  chmod +x "$PLUGIN_DEST"
+fi
 
 echo "Installed $BINARY $LATEST to $DEST"
+if $HAS_PLUGIN_ARCHIVE; then
+  echo "Installed $PLUGIN_BINARY $LATEST to $PLUGIN_DEST"
+else
+  echo "Warning: $PLUGIN_BINARY archive not found in release $LATEST; powermenu plugin was not installed."
+fi
 
 # ── Create plugin folder structure ────────────────────────────────────────────
 PLUGIN_DIR="${XDG_DATA_HOME:-$HOME/.local/share}/ui/plugins"
