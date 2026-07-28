@@ -1,0 +1,16 @@
+[package]
+name = "powermenu"
+version = "0.1.0"
+edition = "2024"
+license.workspace = true
+
+[[bin]]
+name = "obtuiner-powermenu"
+path = "src/main.rs"
+
+[dependencies]
+anyhow.workspace = true
+crossterm.workspace = true
+ratatui.workspace = true
+tui_kit = { path = "../tui_kit" }
+plugin_api = { path = "../plugin_api" }

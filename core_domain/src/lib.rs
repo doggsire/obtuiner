@@ -90,6 +90,12 @@ pub fn data_dir() -> PathBuf {
         .join(APP_QUALIFIER)
 }
 
+/// Directory scanned by the root CLI for external plugin executables, in
+/// addition to `PATH`.
+pub fn plugins_dir() -> PathBuf {
+    data_dir().join("plugins")
+}
+
 // ── Launcher profile persistence ───────────────────────────────────────────
 
 fn profiles_path() -> PathBuf {

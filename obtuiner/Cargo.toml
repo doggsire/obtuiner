@@ -9,3 +9,5 @@ anyhow.workspace = true
 installer = { path = "../installer" }
 launcher = { path = "../launcher" }
 updater = { path = "../updater" }
+core_domain = { path = "../core_domain" }
+plugin_api = { path = "../plugin_api" }

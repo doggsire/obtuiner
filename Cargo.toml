@@ -7,6 +7,8 @@ members = [
     "tui_kit",
     "core_domain",
     "runtime_ops",
+    "plugin_api",
+    "powermenu",
 ]
 resolver = "2"
 
