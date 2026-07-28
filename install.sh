@@ -87,14 +87,11 @@ fi
 # ── Install ────────────────────────────────────────────────────────────────────
 DEST="$INSTALL_DIR/$BINARY"
 PLUGIN_DEST="$INSTALL_DIR/$PLUGIN_BINARY"
+USE_SUDO=false
 if [ -w "$INSTALL_DIR" ]; then
   mv "$TMP/$BINARY" "$DEST"
   if $HAS_PLUGIN_ARCHIVE; then
     mv "$TMP/$PLUGIN_BINARY" "$PLUGIN_DEST"
-  fi
-  chmod +x "$DEST"
-  if $HAS_PLUGIN_ARCHIVE; then
-    chmod +x "$PLUGIN_DEST"
   fi
 else
   echo "Need sudo to install to $INSTALL_DIR"
@@ -102,9 +99,18 @@ else
   if $HAS_PLUGIN_ARCHIVE; then
     sudo mv "$TMP/$PLUGIN_BINARY" "$PLUGIN_DEST"
   fi
+  USE_SUDO=true
+fi
+
+if $USE_SUDO; then
   sudo chmod +x "$DEST"
   if $HAS_PLUGIN_ARCHIVE; then
     sudo chmod +x "$PLUGIN_DEST"
+  fi
+else
+  chmod +x "$DEST"
+  if $HAS_PLUGIN_ARCHIVE; then
+    chmod +x "$PLUGIN_DEST"
   fi
 fi
 
