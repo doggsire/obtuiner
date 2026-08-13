@@ -222,7 +222,7 @@ pub fn run(_args: &[String]) -> Result<()> {
                                     mode = AppMode::Confirm(action.clone());
                                 }
                             }
-                            CommonAction::None => {}
+                            CommonAction::None | CommonAction::CompleteSelected => {}
                         }
                     }
                 }
