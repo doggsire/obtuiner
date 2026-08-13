@@ -13,7 +13,9 @@ use std::process::Command;
 #[cfg(unix)]
 use std::os::unix::process::CommandExt;
 
-use anyhow::{Context, Result};
+#[cfg(not(unix))]
+use anyhow::Context;
+use anyhow::Result;
 use plugin_api::{PluginMetadata, METADATA_FLAG, PLUGIN_EXECUTABLE_PREFIX};
 
 /// A discovered plugin executable, ready to be dispatched to.
@@ -38,23 +40,25 @@ impl ExternalPlugin {
         }
 
         #[cfg(not(unix))]
-        let status = Command::new(&self.executable_path)
-            .args(args)
-            .status()
-            .with_context(|| {
-                format!(
-                    "failed to launch plugin '{}'",
-                    self.executable_path.display()
-                )
-            })?;
-        if status.success() {
-            Ok(())
-        } else {
-            Err(anyhow::anyhow!(
-                "plugin '{}' exited with status {}",
-                self.metadata.name,
-                status
-            ))
+        {
+            let status = Command::new(&self.executable_path)
+                .args(args)
+                .status()
+                .with_context(|| {
+                    format!(
+                        "failed to launch plugin '{}'",
+                        self.executable_path.display()
+                    )
+                })?;
+            if status.success() {
+                Ok(())
+            } else {
+                Err(anyhow::anyhow!(
+                    "plugin '{}' exited with status {}",
+                    self.metadata.name,
+                    status
+                ))
+            }
         }
     }
 }
