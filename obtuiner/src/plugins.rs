@@ -10,6 +10,9 @@ use std::collections::HashSet;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
+#[cfg(unix)]
+use std::os::unix::process::CommandExt;
+
 use anyhow::{Context, Result};
 use plugin_api::{PluginMetadata, METADATA_FLAG, PLUGIN_EXECUTABLE_PREFIX};
 
@@ -22,8 +25,19 @@ pub struct ExternalPlugin {
 
 impl ExternalPlugin {
     /// Run the plugin executable with `args`, inheriting the current
-    /// process's stdio so it can drive its own terminal UI.
+    /// process's stdio so it can drive its own terminal UI. On Unix, replace
+    /// the current process entirely so fullscreen TUIs own the terminal.
     pub fn run(&self, args: &[String]) -> Result<()> {
+        #[cfg(unix)]
+        {
+            let err = Command::new(&self.executable_path).args(args).exec();
+            return Err(anyhow::Error::new(err).context(format!(
+                "failed to launch plugin '{}'",
+                self.executable_path.display()
+            )));
+        }
+
+        #[cfg(not(unix))]
         let status = Command::new(&self.executable_path)
             .args(args)
             .status()
